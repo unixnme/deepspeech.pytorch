@@ -2,8 +2,6 @@ import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
-from torch.distributed import get_rank
-from torch.distributed import get_world_size
 from torch.utils.data.sampler import Sampler
 
 import librosa

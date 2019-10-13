@@ -109,9 +109,9 @@ class BeamCTCDecoder(Decoder):
         for b, batch in enumerate(out):
             utterances = []
             for p, utt in enumerate(batch):
-                if self.wfst:
-                    utt = torch.LongTensor([self.mapping[idx] for idx in utt.tolist()])
                 size = seq_len[b][p]
+                if self.wfst:
+                    utt = torch.LongTensor([self.mapping[idx] for idx in utt[:size].tolist()])
                 if size > 0:
                     transcript = ''.join(map(lambda x: self.int_to_char[x.item()], utt[0:size]))
                 else:

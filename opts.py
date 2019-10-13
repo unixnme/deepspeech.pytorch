@@ -23,4 +23,5 @@ def add_inference_args(parser):
     parser.add_argument('--decoder', default="greedy", choices=["greedy", "beam"], type=str, help="Decoder to use")
     parser.add_argument('--model-path', default='models/deepspeech_final.pth',
                         help='Path to model file created by training')
+    parser.add_argument('--wfst', action='store_true', help="use wfst decoder")
     return parser

@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
         decoder = BeamCTCDecoder(model.labels, lm_path=args.lm_path, alpha=args.alpha, beta=args.beta,
                                  cutoff_top_n=args.cutoff_top_n, cutoff_prob=args.cutoff_prob,
-                                 beam_width=args.beam_width, num_processes=args.lm_workers)
+                                 beam_width=args.beam_width, num_processes=args.lm_workers, wfst=args.wfst)
     else:
         decoder = GreedyDecoder(model.labels, blank_index=model.labels.index('_'))
 

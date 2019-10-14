@@ -90,4 +90,4 @@ if __name__ == '__main__':
 
     print("Saving tuning results to: {}".format(args.output_path))
     with open(args.output_path, "w") as fh:
-        json.dump(scores, fh)
+        json.dump(scores, fh, indent=4)

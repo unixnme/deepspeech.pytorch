@@ -50,7 +50,7 @@ def decode_dataset(params):
     decoder._decoder.reset_params(lm_alpha, lm_beta)
 
     total_cer, total_wer, num_tokens, num_chars = 0, 0, 0, 0
-    for out, sizes, target_strings in saved_output:
+    for out, sizes, target_strings in tqdm(saved_output):
         out = torch.Tensor(out).float()
         sizes = torch.Tensor(sizes).int()
         decoded_output, _, = decoder.decode(out, sizes)

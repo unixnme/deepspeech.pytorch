@@ -25,6 +25,7 @@ parser.add_argument('--lm-beta-to', default=0.5, type=float,
                     help='Language model word bonus (all words) end tuning')
 parser.add_argument('--lm-num-alphas', default=45, type=float, help='Number of alpha candidates for tuning')
 parser.add_argument('--lm-num-betas', default=8, type=float, help='Number of beta candidates for tuning')
+parser.add_argument('--wfst', action='store_true')
 parser = add_decoder_args(parser)
 args = parser.parse_args()
 
@@ -34,13 +35,13 @@ if args.lm_path is None:
 
 model = DeepSpeech.load_model(args.model_path)
 
-saved_output = np.load(args.saved_output)
+saved_output = np.load(args.saved_output, allow_pickle=True)
 
 
 def init(beam_width, blank_index, lm_path):
     global decoder
     decoder = BeamCTCDecoder(model.labels, lm_path=lm_path, beam_width=beam_width, num_processes=args.lm_workers,
-                             blank_index=blank_index)
+                             blank_index=blank_index, wfst=args.wfst)
 
 
 def decode_dataset(params):
@@ -49,7 +50,7 @@ def decode_dataset(params):
     decoder._decoder.reset_params(lm_alpha, lm_beta)
 
     total_cer, total_wer, num_tokens, num_chars = 0, 0, 0, 0
-    for out, sizes, target_strings in saved_output:
+    for out, sizes, target_strings in tqdm(saved_output):
         out = torch.Tensor(out).float()
         sizes = torch.Tensor(sizes).int()
         decoded_output, _, = decoder.decode(out, sizes)
@@ -69,7 +70,10 @@ def decode_dataset(params):
 
 
 if __name__ == '__main__':
-    p = Pool(args.num_workers, init, [args.beam_width, model.labels.index('_'), args.lm_path])
+    if args.num_workers > 0:
+        p = Pool(args.num_workers, init, [args.beam_width, model.labels.index('_'), args.lm_path])
+    else:
+        init(args.beam_width, model.labels.index('_'), args.lm_path)
 
     cand_alphas = np.linspace(args.lm_alpha_from, args.lm_alpha_to, args.lm_num_alphas)
     cand_betas = np.linspace(args.lm_beta_from, args.lm_beta_to, args.lm_num_betas)
@@ -77,8 +81,13 @@ if __name__ == '__main__':
                    for beta in cand_betas]
 
     scores = []
-    for params in tqdm(p.imap(decode_dataset, params_grid), total=len(params_grid)):
-        scores.append(list(params))
+    if args.num_workers > 0:
+        for params in tqdm(p.imap(decode_dataset, params_grid), total=len(params_grid)):
+            scores.append(list(params))
+    else:
+        for param in tqdm(params_grid):
+            scores.append(decode_dataset(param))
+
     print("Saving tuning results to: {}".format(args.output_path))
     with open(args.output_path, "w") as fh:
-        json.dump(scores, fh)
+        json.dump(scores, fh, indent=4)

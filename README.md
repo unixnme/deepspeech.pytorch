@@ -287,3 +287,26 @@ Pre-trained models can be found under releases [here](https://github.com/SeanNar
 ## Acknowledgements
 
 Thanks to [Egor](https://github.com/EgorLakomkin) and [Ryan](https://github.com/ryanleary) for their contributions!
+
+## Setup
+```
+# get test audio data
+cd data && python librispeech.py && cd ..
+# download the acoustic model
+wget https://github.com/SeanNaren/deepspeech.pytorch/releases/download/v2.0/librispeech_pretrained_v2.pth
+# download the language model
+wget http://www.openslr.org/resources/11/3-gram.pruned.3e-7.arpa.gz
+gzip -d 3-gram.pruned.3e-7.arpa.gz
+
+# lastly, do the following
+# clone ctcdecode_private and install
+# clone fst_ngram and get LG.fst from hbka directory's run.sh
+```
+
+## Evaluate
+```
+# get acoustic probability
+python test.py --test-manifest data/libri_test_other_manifest.csv --model-path librispeech_pretrained_v2.pth --save-output librispeech_test_other.npy
+# run evaluation
+python search_lm_params.py --lm-path LG.fst --saved-output librispeech_test_other_output.npy --lm-workers 1 --lm-alpha-from 1.97 --lm-beta-from 4.36 --beam-width 1000 --lm-num-alphas 1 --lm-num-betas 1 --model-path librispeech_pretrained_v2.pth --wfst --num-workers 1
+```

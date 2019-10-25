@@ -310,3 +310,15 @@ python test.py --test-manifest data/libri_test_other_manifest.csv --model-path l
 # run evaluation
 python search_lm_params.py --lm-path LG.fst --saved-output librispeech_test_other_output.npy --lm-workers 1 --lm-alpha-from 1.97 --lm-beta-from 4.36 --beam-width 1000 --lm-num-alphas 1 --lm-num-betas 1 --model-path librispeech_pretrained_v2.pth --wfst --num-workers 1
 ```
+with regular beam search, we get<br>
+Alpha: 1.600000 <br>
+Beta: 3.000000 <br>
+WER: 19.511683<br>
+CER: 8.260069<br>
+
+with WFST, we get<br>
+Alpha: 2.600000<br> 
+Beta: 0.000000 <br>
+WER: 18.579371<br>
+CER: 8.158881<br>
+

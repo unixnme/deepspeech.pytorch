@@ -88,15 +88,19 @@ class Decoder(object):
 
 
 class BeamCTCDecoder(Decoder):
-    def __init__(self, labels, lm_path=None, alpha=0, beta=0, cutoff_top_n=40, cutoff_prob=1.0, beam_width=100,
+    def __init__(self, labels, lm_path=None, lm_bwd_path=None, alpha=0, beta=0, cutoff_top_n=40, cutoff_prob=1.0, beam_width=100,
                  num_processes=4, blank_index=0, wfst:bool=False):
         super(BeamCTCDecoder, self).__init__(labels)
         try:
-            from ctcdecode import CTCBeamDecoder
+            from ctcdecode import CTCBeamDecoder, BidirectionalCTCBeamDecoder
         except ImportError:
             raise ImportError("BeamCTCDecoder requires paddledecoder package.")
-        self._decoder = CTCBeamDecoder(labels, lm_path, alpha, beta, cutoff_top_n, cutoff_prob, beam_width,
-                                       num_processes, blank_index, wfst=wfst)
+        if lm_bwd_path is None:
+            self._decoder = CTCBeamDecoder(labels, lm_path, alpha, beta, cutoff_top_n, cutoff_prob, beam_width,
+                                           num_processes, blank_index, wfst=wfst)
+        else:
+            self._decoder = BidirectionalCTCBeamDecoder(labels, lm_path, lm_bwd_path, alpha, beta, cutoff_top_n, cutoff_prob, beam_width,
+                                           num_processes, blank_index)
         self.wfst = wfst
         if wfst:
             self.mapping = dict((65+i, 2+i) for i in range(26))

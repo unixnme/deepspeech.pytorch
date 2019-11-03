@@ -5,6 +5,7 @@ def add_decoder_args(parser):
     beam_args.add_argument('--beam-width', default=10, type=int, help='Beam width to use')
     beam_args.add_argument('--lm-path', default=None, type=str,
                            help='Path to an (optional) kenlm language model for use with beam search (req\'d with trie)')
+    beam_args.add_argument('--lm-bwd-path', default=None, type=str)
     beam_args.add_argument('--alpha', default=0.8, type=float, help='Language model weight')
     beam_args.add_argument('--beta', default=1, type=float, help='Language model word bonus (all words)')
     beam_args.add_argument('--cutoff-top-n', default=40, type=int,

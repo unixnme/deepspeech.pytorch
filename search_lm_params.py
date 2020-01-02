@@ -23,9 +23,9 @@ parser.add_argument('--lm-beta-from', default=0.0, type=float,
                     help='Language model word bonus (all words) start tuning')
 parser.add_argument('--lm-beta-to', default=0.5, type=float,
                     help='Language model word bonus (all words) end tuning')
-parser.add_argument('--lm-num-alphas', default=45, type=float, help='Number of alpha candidates for tuning')
-parser.add_argument('--lm-num-betas', default=8, type=float, help='Number of beta candidates for tuning')
-parser.add_argument('--wfst', action='store_true')
+parser.add_argument('--lm-num-alphas', default=45, type=int, help='Number of alpha candidates for tuning')
+parser.add_argument('--lm-num-betas', default=8, type=int, help='Number of beta candidates for tuning')
+parser.add_argument('--decoder', type=str, choices=["beam", "wfst", "kaldi"], default="beam")
 parser = add_decoder_args(parser)
 args = parser.parse_args()
 
@@ -41,7 +41,7 @@ saved_output = np.load(args.saved_output, allow_pickle=True)
 def init(beam_width, blank_index, lm_path):
     global decoder
     decoder = BeamCTCDecoder(model.labels, lm_path=lm_path, beam_width=beam_width, num_processes=args.lm_workers,
-                             blank_index=blank_index, wfst=args.wfst)
+                             blank_index=blank_index, decoder_type=args.decoder)
 
 
 def decode_dataset(params):

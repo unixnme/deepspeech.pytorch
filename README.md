@@ -307,18 +307,42 @@ gzip -d 3-gram.pruned.3e-7.arpa.gz
 ```
 # get acoustic probability
 python test.py --test-manifest data/libri_test_other_manifest.csv --model-path librispeech_pretrained_v2.pth --save-output librispeech_test_other.npy
-# run evaluation
-python search_lm_params.py --lm-path LG.fst --saved-output librispeech_test_other_output.npy --lm-workers 1 --lm-alpha-from 1.97 --lm-beta-from 4.36 --beam-width 1000 --lm-num-alphas 1 --lm-num-betas 1 --model-path librispeech_pretrained_v2.pth --wfst --num-workers 1
+
+# run beam decoder evaluation
+python search_lm_params.py --lm-path 3-gram.pruned.3e-7.arpa \
+ --saved-output librispeech_test_other_output.npy \
+ --lm-workers 16 \
+ --lm-alpha-from 0 \
+ --lm-alpha-to 4 \
+ --lm-beta-from 1 \ 
+ --lm-beta-to 5 \
+ --beam-width 100 \
+ --lm-num-alphas 21 \
+ --lm-num-betas 5 \
+ --model-path librispeech_pretrained_v2.pth \
+ --decoder beam \
+ --num-workers 0
+Alpha: 2.000000 
+Beta: 4.000000 
+WER: 19.727566
+CER: 8.595532
+
+# run kaldi simple decoder evaluation (use fst_ngram/hkba/run.sh to create TLG.fst)
+python search_lm_params.py --lm-path TLG.fst \
+ --saved-output librispeech_test_other_output.npy \
+ --lm-workers 16 \
+ --lm-alpha-from 0 \
+ --lm-alpha-to 4 \
+ --lm-beta-from 1 \ 
+ --lm-beta-to 5 \
+ --beam-width 100 \
+ --lm-num-alphas 21 \
+ --lm-num-betas 5 \
+ --model-path librispeech_pretrained_v2.pth \
+ --decoder kaldi \
+ --num-workers 0
+Alpha: 2.400000 
+Beta: 1.000000 
+WER: 18.925167
+CER: 8.327895
 ```
-with regular beam search, we get<br>
-Alpha: 1.600000 <br>
-Beta: 3.000000 <br>
-WER: 19.511683<br>
-CER: 8.260069<br>
-
-with WFST, we get<br>
-Alpha: 2.600000<br> 
-Beta: 0.000000 <br>
-WER: 18.579371<br>
-CER: 8.158881<br>
-

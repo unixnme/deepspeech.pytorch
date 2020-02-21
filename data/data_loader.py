@@ -134,10 +134,21 @@ class SpectrogramParser(AudioParser):
         spect = np.log1p(spect)
         spect = torch.FloatTensor(spect)
         if self.normalize:
-            mean = spect.mean()
-            std = spect.std()
-            spect.add_(-mean)
-            spect.div_(std)
+            if not stream:
+                mean = spect.mean()
+                std = spect.std()
+                spect.add_(-mean)
+                spect.div_(std)
+            else:
+                mean = 0
+                std = 0
+                momentum = 1
+                for idx in range(spect.size(1)):
+                    mean = (1-momentum) * mean + momentum * spect[:,idx].mean()
+                    std = (1-momentum) * std + momentum * spect[:,idx].std()
+                    spect[:,idx].add_(-mean)
+                    spect[:,idx].div_(std)
+                    momentum *= 0.9
 
         if self.spec_augment:
             spect = spec_augment(spect)

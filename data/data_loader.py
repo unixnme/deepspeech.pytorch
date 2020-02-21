@@ -20,15 +20,22 @@ windows = {'hamming': scipy.signal.hamming, 'hann': scipy.signal.hann, 'blackman
            'bartlett': scipy.signal.bartlett}
 
 
-def load_audio(path):
-    sample_rate, sound = read(path)
-    sound = sound.astype('float32') / 32767  # normalize audio
-    if len(sound.shape) > 1:
-        if sound.shape[1] == 1:
-            sound = sound.squeeze()
-        else:
-            sound = sound.mean(axis=1)  # multiple channels, average
-    return sound
+def load_audio(path, stream:bool):
+    if not stream:
+        sample_rate, sound = read(path)
+        sound = sound.astype('float32') / 32767  # normalize audio
+        if len(sound.shape) > 1:
+            if sound.shape[1] == 1:
+                sound = sound.squeeze()
+            else:
+                sound = sound.mean(axis=1)  # multiple channels, average
+        return sound
+    else:
+        block_length = 1
+        frame_length = 320
+        hop_length = 160
+        sound = librosa.core.stream(path, block_length, frame_length, hop_length)
+        return [w for w in sound]
 
 
 class AudioParser(object):
@@ -103,11 +110,11 @@ class SpectrogramParser(AudioParser):
             'noise_dir') is not None else None
         self.noise_prob = audio_conf.get('noise_prob')
 
-    def parse_audio(self, audio_path):
+    def parse_audio(self, audio_path, stream:bool):
         if self.speed_volume_perturb:
             y = load_randomly_augmented_audio(audio_path, self.sample_rate)
         else:
-            y = load_audio(audio_path)
+            y = load_audio(audio_path, stream)
         if self.noiseInjector:
             add_noise = np.random.binomial(1, self.noise_prob)
             if add_noise:
@@ -116,8 +123,12 @@ class SpectrogramParser(AudioParser):
         win_length = n_fft
         hop_length = int(self.sample_rate * self.window_stride)
         # STFT
-        D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length,
-                         win_length=win_length, window=self.window)
+        if not stream:
+            D = librosa.stft(y, n_fft=n_fft, hop_length=hop_length,
+                             win_length=win_length, window=self.window, center=False)
+        else:
+            D = [librosa.stft(w, n_fft=n_fft, window=self.window, center=False) for w in y]
+            D = np.concatenate(D, 1)
         spect, phase = librosa.magphase(D)
         # S = log(S+1)
         spect = np.log1p(spect)

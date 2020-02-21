@@ -43,8 +43,8 @@ def decode_results(decoded_output, decoded_offsets):
     return results
 
 
-def transcribe(audio_path, spect_parser, model, decoder, device, use_half):
-    spect = spect_parser.parse_audio(audio_path).contiguous()
+def transcribe(audio_path, spect_parser, model, decoder, device, use_half, stream:bool):
+    spect = spect_parser.parse_audio(audio_path, stream).contiguous()
     spect = spect.view(1, 1, spect.size(0), spect.size(1))
     spect = spect.to(device)
     if use_half:
@@ -61,6 +61,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--audio-path', default='audio.wav',
                               help='Audio file to predict on')
     arg_parser.add_argument('--offsets', dest='offsets', action='store_true', help='Returns time offset information')
+    arg_parser.add_argument('--stream', action='store_true')
     arg_parser = add_decoder_args(arg_parser)
     args = arg_parser.parse_args()
     device = torch.device("cuda" if args.cuda else "cpu")
@@ -71,7 +72,7 @@ if __name__ == '__main__':
 
         decoder = BeamCTCDecoder(model.labels, lm_path=args.lm_path, alpha=args.alpha, beta=args.beta,
                                  cutoff_top_n=args.cutoff_top_n, cutoff_prob=args.cutoff_prob,
-                                 beam_width=args.beam_width, num_processes=args.lm_workers, wfst=args.wfst)
+                                 beam_width=args.beam_width, num_processes=args.lm_workers)
     else:
         decoder = GreedyDecoder(model.labels, blank_index=model.labels.index('_'))
 
@@ -82,5 +83,6 @@ if __name__ == '__main__':
                                                  model=model,
                                                  decoder=decoder,
                                                  device=device,
-                                                 use_half=args.half)
+                                                 use_half=args.half,
+                                                 stream=args.stream)
     print(json.dumps(decode_results(decoded_output, decoded_offsets)))

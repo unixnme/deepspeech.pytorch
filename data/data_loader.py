@@ -148,7 +148,7 @@ class SpectrogramParser(AudioParser):
                     std = (1-momentum) * std + momentum * spect[:,idx].std()
                     spect[:,idx].add_(-mean)
                     spect[:,idx].div_(std)
-                    momentum *= 0.9
+                    momentum = max(0.1, 0.9 * momentum)
 
         if self.spec_augment:
             spect = spec_augment(spect)
